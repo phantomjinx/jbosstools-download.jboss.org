@@ -9,12 +9,29 @@
 
   <property name="destination" value="${basedir}"/>
   <property name="workDir" value="${destination}/${version}"/>
-  <target name="run">
-    <ant antfile="../generic/build.xml" target="mirror">
-      <property name="LONGNAME" value="Apache Directory Studio"/>
-      <property name="version" value="${version}"/>
-      <property name="URL" value="http://directory.apache.org/studio/update/2.x/"/>
-    </ant>
+  <property name="latestversiononly" value="true"/>
+
+  <property name="URL1" value="http://directory.apache.org/studio/update/2.x/" />
+  
+  <target name="run" depends="mirror,regen"/>
+
+  <target name="mirror">
+    <p2.mirror>
+      <repository location="file:${workDir}/" name="apache-directory-${version}" />
+      <source>
+        <repository location="${URL1}" />
+      </source>
+
+      <slicingoptions includefeatures="true" followstrict="true" latestversiononly="${latestversiononly}" />
+      <iu id="org.apache.directory.studio.ldapbrowser.feature.feature.group"/>
+
+    </p2.mirror>
+  </target>
+
+  <!-- regenerate metadata as bundles do not validate due to being partial IUs: want to download from OUR mirror, not their site -->
+  <target name="regen">
+    <p2.publish.featuresAndBundles metadataRepository="file:${workDir}/" artifactRepository="file:${workDir}/" publishartifacts="true" source="${workDir}/"/>
+    <p2.process.artifacts repositoryPath="file:${workDir}" />
     <ant antfile="${destination}/../remove.references.xml" target="remove.references"/>
   </target>
 </project>
